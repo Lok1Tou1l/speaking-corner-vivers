@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speaking Corner — Real-time Speaking Sessions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<style>
+:root {
+  --bg: #F8F8FA;
+  --card: #FFFFFF;
+  --ink: #18181B;
+  --mut: #71717A;
+  --sub: #A1A1AA;
+  --border: #E4E4E7;
+  --pri: #FF5500;
+  --pri-hover: #E64A00;
+  --pri-light: #FFF2EB;
+  --pri-glow: rgba(255, 85, 0, 0.28);
+  --soft: #F4F4F6;
+  --soft-hover: #EAEAEE;
+  --radius-card: 26px;
+  --radius-btn: 9999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111113;
+    --card: #1A1A1E;
+    --ink: #F4F4F5;
+    --mut: #A1A1AA;
+    --sub: #71717A;
+    --border: #27272A;
+    --pri: #FF5500;
+    --pri-hover: #FF661A;
+    --pri-light: #2E1910;
+    --pri-glow: rgba(255, 85, 0, 0.35);
+    --soft: #242429;
+    --soft-hover: #2E2E35;
+  }
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  overflow-x: hidden;
+}
+
+/* Background atmospheric ambient gradients */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.65;
+  background:
+    radial-gradient(550px 550px at 10% 10%, rgba(255, 85, 0, 0.08), transparent 70%),
+    radial-gradient(600px 600px at 90% 25%, rgba(255, 140, 0, 0.06), transparent 70%),
+    radial-gradient(500px 500px at 50% 90%, rgba(255, 85, 0, 0.05), transparent 70%);
+}
+
+.sc-card {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+.sc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-btn);
+  padding: 0.75rem 1.4rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid transparent;
+}
+.sc-btn:active { transform: scale(0.97); }
+
+.sc-btn-primary {
+  background: var(--pri);
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px var(--pri-glow);
+}
+.sc-btn-primary:hover {
+  background: var(--pri-hover);
+  box-shadow: 0 10px 28px var(--pri-glow);
+}
+
+.sc-btn-secondary {
+  background: var(--soft);
+  color: var(--ink);
+  border-color: var(--border);
+}
+.sc-btn-secondary:hover {
+  background: var(--soft-hover);
+}
+
+.sc-btn-danger {
+  background: #EF4444;
+  color: #FFFFFF;
+}
+.sc-btn-danger:hover { background: #DC2626; }
+
+.sc-input {
+  width: 100%;
+  border-radius: var(--radius-btn);
+  padding: 0.8rem 1.25rem;
+  background: var(--soft);
+  color: var(--ink);
+  border: 1.5px solid transparent;
+  outline: none;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.sc-input:focus {
+  border-color: var(--pri);
+  background: var(--card);
+  box-shadow: 0 0 0 3px var(--pri-light);
+}
+
+.sc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: var(--radius-btn);
+  padding: 0.45rem 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--soft);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  transition: all 0.15s ease;
+}
+
+/* Category Card matching Screenshot 1 */
+.category-card {
+  position: relative;
+  border-radius: 24px;
+  padding: 1.25rem;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+.category-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -6px rgba(0,0,0,0.08);
+}
+.category-card:active {
+  transform: scale(0.98);
+}
+
+.category-card.selected {
+  background: linear-gradient(135deg, #FF6014 0%, #FF4500 100%);
+  border-color: #FF5500;
+  color: #FFFFFF !important;
+  box-shadow: 0 14px 32px -4px rgba(255, 85, 0, 0.42);
+}
+.category-card.selected h3,
+.category-card.selected p,
+.category-card.selected svg {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+/* Code Digit Input Box matching Screenshot 2 */
+.code-box {
+  width: 3.5rem;
+  height: 4.25rem;
+  border-radius: 18px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--ink);
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+@media (min-width: 640px) {
+  .code-box { width: 4.25rem; height: 5rem; font-size: 2.1rem; }
+}
+.code-box.active {
+  border-color: var(--pri);
+  box-shadow: 0 0 0 4px var(--pri-light), 0 6px 16px var(--pri-glow);
+  transform: translateY(-2px);
+}
+.code-box.filled {
+  border-color: var(--ink);
+}
+
+/* Keypad Key matching Screenshot 2 */
+.keypad-btn {
+  border-radius: 9999px;
+  background: var(--soft);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 1.25rem;
+  height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+.keypad-btn:active {
+  transform: scale(0.92);
+  background: var(--soft-hover);
+}
+.keypad-btn.action {
+  background: var(--pri);
+  color: #FFFFFF;
+  box-shadow: 0 6px 18px var(--pri-glow);
+}
+
+/* Pulse animation for active speaker */
+@keyframes speakerGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 85, 0, 0.5); }
+  50% { box-shadow: 0 0 0 16px rgba(255, 85, 0, 0); }
+}
+.speaking-glow {
+  animation: speakerGlow 2.2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+</style>
+</head>
+<body>
+
+<div id="app" class="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8"></div>
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 sc-btn sc-btn-primary shadow-xl z-50 hidden opacity-0 transition-all duration-300"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+// Curated Categories directly matching Screenshot 1 + Rich Speaking Prompts
+const CATEGORIES = [
+  {
+    id: "sports",
+    name: "Sports",
+    subtitle: "Athletics & Fitness",
+    icon: `<svg class="w-16 h-16 opacity-35" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4.93 4.93c4.24 4.24 4.24 9.9 0 14.14M19.07 4.93c-4.24 4.24-4.24 9.9 0 14.14M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+    topics: [
+      "What sport or physical activity brings out your competitive side?",
+      "Do high-profile athletes get paid too much, or is it fair compensation?",
+      "What workout routine or healthy habit has changed your life the most?",
+      "An extreme or adventure sport you would try if fear wasn't a factor.",
+      "Is team chemistry or individual star power more important to win championships?"
+    ]
+  },
+  {
+    id: "entertainment",
+    name: "Entertainment",
+    subtitle: "Movies & Music",
+    icon: `<svg class="w-16 h-16 opacity-35" viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>`,
+    topics: [
+      "What movie or show could you rewatch endlessly without getting bored?",
+      "How has streaming culture changed the way we experience great stories?",
+      "If you could have dinner with any filmmaker or musical artist, who?",
+      "What is a wildly overrated entertainment trend that everyone loves?",
+      "Which fictional universe would you choose to live in for a month?"
+    ]
+  },
+  {
+    id: "tech",
+    name: "Technology & AI",
+    subtitle: "Innovation & Future",
+    icon: `<svg class="w-16 h-16 opacity-35" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.38-1 1.72V7h2a5 5 0 0 1 5 5v1.28c.6.34 1 .98 1 1.72a2 2 0 0 1-4 0c0-.74.4-1.38 1-1.72V12a3 3 0 0 0-3-3h-2v2.28c.6.34 1 .98 1 1.72a2 2 0 0 1-4 0c0-.74.4-1.38 1-1.72V9H9a3 3 0 0 0-3 3v1.28c.6.34 1 .98 1 1.72a2 2 0 0 1-4 0c0-.74.4-1.38 1-1.72V12a5 5 0 0 1 5-5h2V5.72c-.6-.34-1-.98-1-1.72a2 2 0 0 1 2-2zM7.5 18a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm9 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>`,
+    topics: [
+      "Is AI going to make humanity freer, or make us overly dependent?",
+      "What sci-fi gadget or invention do you wish was invented yesterday?",
+      "Are smartphones making human conversations better or shallower?",
+      "If you had to automate one tedious chore in your life, what would it be?",
+      "Will physical cash, desks, and schools still exist in 30 years?"
+    ]
+  },
+  {
+    id: "gaming",
+    name: "Gaming",
+    subtitle: "Games & Creative Fun",
+    icon: `<svg class="w-16 h-16 opacity-35" viewBox="0 0 24 24" fill="currentColor"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>`,
+    topics: [
+      "What game or hobby taught you an unexpected real-life skill?",
+      "Why are gaming and esports drawing bigger crowds than classic events?",
+      "What game from your childhood holds the fondest memories for you?",
+      "If you could design a new video game or board game, what's the premise?",
+      "Co-op team gaming vs deep single-player story: what's your preference?"
+    ]
+  },
+  {
+    id: "religion",
+    name: "Life & Beliefs",
+    subtitle: "Meaning & Purpose",
+    icon: `<svg class="w-16 h-16 opacity-35" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`,
+    topics: [
+      "What personal belief or outlook of yours has evolved the most with time?",
+      "What does living a genuinely fulfilling life mean to you?",
+      "What is the single best piece of advice anyone has ever shared with you?",
+      "What small daily ritual consistently gives you clarity or peace?",
+      "How do you make hard decisions when there's no clear right answer?"
+    ]
+  },
+  {
+    id: "politics",
+    name: "Society & World",
+    subtitle: "Currents & Culture",
+    icon: `<svg class="w-16 h-16 opacity-35" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>`,
+    topics: [
+      "What is one law or societal norm you would change if you had the power?",
+      "How can local communities help people feel less lonely and more connected?",
+      "Should public transport and internet access be treated as basic human rights?",
+      "What quality do you respect most in leaders, whether in business or society?",
+      "How can we build constructive conversations between people who strongly disagree?"
+    ]
+  }
+];
+
+let ws;
+let code = new URLSearchParams(location.search).get("room");
+let isHost = false;
+let S = null;
+let off = 0;
+let pres = false;
+let lastEv = 0;
+let ac = null;
+let sig = "";
+let retry = 0;
+let refocus = false;
+
+// Selected category and topic management
+let selectedCategory = "sports";
+let customTopic = "";
+let activeScreen = "home"; // 'home', 'join', 'setup'
+let enteredCode = ["", "", "", "", ""];
+
+let draft = { tp: null, is: null, ss: null };
+const KEY = c => "sc_host_" + c;
+const fmt = ms => {
+  const t = Math.max(0, Math.ceil(ms / 1000));
+  return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0");
+};
+const send = o => ws && ws.readyState === 1 && ws.send(JSON.stringify(o));
+
+function toast(t) {
+  const e = $("#toast");
+  if (!e) return;
+  e.textContent = t;
+  e.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    e.classList.remove("opacity-0");
+    e.classList.add("opacity-100", "-translate-y-2");
+  });
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => {
+    e.classList.remove("opacity-100", "-translate-y-2");
+    e.classList.add("opacity-0");
+    setTimeout(() => e.classList.add("hidden"), 300);
+  }, 2400);
+}
+
+function join(c) {
+  let k = null;
+  try { k = localStorage.getItem(KEY(c)); } catch (e) {}
+  send({ t: "join", code: c.toUpperCase(), hostKey: k });
+}
+
+function connect() {
+  const proto = location.protocol === "https:" ? "wss://" : "ws://";
+  ws = new WebSocket(proto + location.host);
+  ws.onopen = () => {
+    retry = 0;
+    if (code) join(code);
+  };
+  ws.onmessage = e => {
+    let m;
+    try { m = JSON.parse(e.data); } catch { return; }
+    if (m.t === "joined") {
+      code = m.code;
+      isHost = m.isHost;
+      if (m.hostKey) {
+        try { localStorage.setItem(KEY(code), m.hostKey); } catch (e) {}
+      }
+      history.replaceState(null, "", "?room=" + code);
+      render();
+    } else if (m.t === "err") {
+      toast(m.msg || "Could not join room");
+      code = null;
+      history.replaceState(null, "", location.pathname);
+      activeScreen = "join";
+      render();
+    } else if (m.t === "state") {
+      off = m.now - Date.now();
+      S = m.state;
+      if (S.ev.n !== lastEv) {
+        if (lastEv) chime(S.ev.kind);
+        lastEv = S.ev.n;
+      }
+      render();
+    }
+  };
+  ws.onclose = () => {
+    if (S) toast("Reconnecting…");
+    setTimeout(connect, Math.min(5000, 600 * ++retry));
+  };
+}
+
+function chime(k) {
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    ac.resume();
+    const freqs = k === "start" ? [523.25, 659.25, 783.99] : [783.99, 659.25, 523.25];
+    freqs.forEach((f, i) => {
+      const o = ac.createOscillator();
+      const g = ac.createGain();
+      o.type = "sine";
+      o.frequency.value = f;
+      o.connect(g);
+      g.connect(ac.destination);
+      const t = ac.currentTime + i * 0.14;
+      g.gain.setValueAtTime(0.001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      o.start(t);
+      o.stop(t + 0.36);
+    });
+  } catch (e) {}
+}
+
+// ----------------- SCREENS -----------------
+
+// SCREEN 1 & HOME: Interest Selection & Topic Picker (Matches Screenshot 1)
+function homeView() {
+  const cat = CATEGORIES.find(c => c.id === selectedCategory) || CATEGORIES[0];
+  const curTopic = customTopic || (cat ? cat.topics[0] : "Share a story from this week");
+
+  return `
+  <div class="max-w-md mx-auto space-y-6 animate-fadeIn pb-8">
+    <!-- Header -->
+    <div class="text-center space-y-1.5 pt-2">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-[#FF5500]/10 text-[#FF5500] mb-1">
+        🎙️ English Speaking Corner
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-[var(--ink)]">
+        What do you want to talk about?
+      </h1>
+      <p class="text-sm font-semibold text-[var(--mut)]">
+        Interest selection
+      </p>
+    </div>
+
+    <!-- 2-Column Category Grid (Screenshot 1) -->
+    <div class="grid grid-cols-2 gap-3.5">
+      ${CATEGORIES.map(c => {
+        const isSel = c.id === selectedCategory;
+        return `
+        <div class="category-card ${isSel ? 'selected' : ''}" data-cat="${c.id}">
+          <!-- Top Right Checkmark Badge for Selected Card -->
+          ${isSel ? `
+          <div class="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-white/25 backdrop-blur-sm border-2 border-white flex items-center justify-center text-white">
+            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          ` : ''}
+
+          <!-- Background Decorative Art / Silhouette -->
+          <div class="absolute top-2 right-2 text-zinc-400 dark:text-zinc-600 transition-opacity pointer-events-none">
+            ${c.icon}
+          </div>
+
+          <!-- Title and Info -->
+          <div class="relative z-10 pt-8">
+            <h3 class="font-extrabold text-base sm:text-lg leading-tight text-[var(--ink)]">
+              ${esc(c.name)}
+            </h3>
+            <p class="text-xs font-semibold text-[var(--mut)] mt-0.5 opacity-80">
+              ${esc(c.subtitle)}
+            </p>
+          </div>
+        </div>
+        `;
+      }).join('')}
+    </div>
+
+    <!-- Active Topic Selector / Prompt Showcase -->
+    <div class="sc-card p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase tracking-wider text-[var(--mut)]">Selected Prompt</span>
+        <button class="text-xs font-bold text-[#FF5500] hover:underline flex items-center gap-1" data-a="shuffleTopic">
+          🎲 Shuffle
+        </button>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-[var(--soft)] text-sm font-bold text-[var(--ink)] leading-snug">
+        "${esc(curTopic)}"
+      </div>
+      <!-- Optional Custom Input -->
+      <div class="pt-1">
+        <input id="customTopicInp" class="sc-input text-sm" placeholder="Or type your own custom topic…" value="${esc(customTopic)}">
+      </div>
+    </div>
+
+    <!-- Actions matching Screenshot 1 -->
+    <div class="space-y-3 pt-1">
+      <button class="sc-btn sc-btn-primary w-full py-4 text-base font-extrabold shadow-lg" data-a="createWithTopic">
+        Get started
+      </button>
+
+      <button class="sc-btn sc-btn-secondary w-full py-3 text-sm font-bold" data-a="goToJoin">
+        Have a room code? Enter code →
+      </button>
+    </div>
+  </div>
+  `;
+}
+
+// SCREEN 2: Enter Room Code / Verification Code Screen (Matches Screenshot 2)
+function joinView() {
+  const codeStr = enteredCode.join("");
+  return `
+  <div class="max-w-md mx-auto space-y-6 animate-fadeIn pb-8">
+    <!-- Header -->
+    <div class="text-center space-y-1.5 pt-4">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-[#FF5500]/10 text-[#FF5500] mb-1">
+        🔑 Room Entry
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-[var(--ink)]">
+        Enter Room Code
+      </h1>
+      <p class="text-sm font-semibold text-[var(--mut)]">
+        Enter the 5-character code to join the session
+      </p>
+    </div>
+
+    <!-- 5 Distinct Code Boxes (Screenshot 2) -->
+    <div class="flex items-center justify-center gap-2.5 sm:gap-3 py-2">
+      ${[0, 1, 2, 3, 4].map(i => {
+        const val = enteredCode[i] || "";
+        const isCurrent = enteredCode.findIndex(c => !c) === i || (enteredCode.every(c => c) && i === 4);
+        return `
+          <div class="code-box ${isCurrent ? 'active' : ''} ${val ? 'filled' : ''}" data-idx="${i}">
+            ${esc(val)}
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <!-- Hidden real input to capture native keyboard -->
+    <div class="flex justify-center">
+      <input id="hiddenCodeInput" type="text" maxlength="5" autocomplete="off" autocorrect="off" autocapitalize="characters" class="opacity-0 w-1 h-1 pointer-events-none absolute">
+      <p class="text-xs font-semibold text-[var(--mut)] text-center">
+        Tap the boxes or use the keypad below
+      </p>
+    </div>
+
+    <!-- Action Button (Screenshot 2 "Verify now" -> "Join room") -->
+    <div class="pt-1">
+      <button class="sc-btn sc-btn-primary w-full py-4 text-base font-extrabold shadow-lg" data-a="submitJoin" ${codeStr.length < 5 ? 'style="opacity:0.65"' : ''}>
+        Join session
+      </button>
+    </div>
+
+    <!-- Numeric & Alpha Keypad (Screenshot 2) -->
+    <div class="grid grid-cols-3 gap-2.5 pt-2 max-w-xs mx-auto">
+      ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `
+        <button class="keypad-btn" data-key="${n}">${n}</button>
+      `).join('')}
+      <button class="keypad-btn text-rose-500 font-bold" data-key="CLEAR">✕</button>
+      <button class="keypad-btn" data-key="0">0</button>
+      <button class="keypad-btn action" data-key="SUBMIT">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Quick Letters Drawer for letter-based codes -->
+    <div class="p-3 sc-card rounded-2xl space-y-2">
+      <div class="flex items-center justify-between text-xs font-bold text-[var(--mut)]">
+        <span>Letters</span>
+        <button class="text-[#FF5500] hover:underline" data-a="pasteCode">📋 Paste from clipboard</button>
+      </div>
+      <div class="flex flex-wrap justify-center gap-1.5">
+        ${"ABCDEFGHJKLMNPQRSTUVWXYZ".split("").map(letter => `
+          <button class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--soft)] hover:bg-[var(--soft-hover)] font-black text-xs sm:text-sm text-[var(--ink)] transition-all active:scale-95" data-key="${letter}">
+            ${letter}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Footer Switcher -->
+    <div class="text-center pt-2">
+      <button class="text-xs font-bold text-[var(--mut)] hover:text-[#FF5500] transition-colors" data-a="goToHome">
+        ← Back to topic selection
+      </button>
+    </div>
+  </div>
+  `;
+}
+
+// ----------------- IN-SESSION VIEW (Stage + Host Dashboard) -----------------
+function shellView() {
+  return `
+  <header id="hdr" class="flex items-center justify-between gap-3 pb-5 pt-1">
+    <div class="flex items-center gap-2.5">
+      <div class="w-10 h-10 rounded-2xl bg-[#FF5500] text-white flex items-center justify-center font-black text-xl shadow-md">
+        🎙️
+      </div>
+      <div>
+        <h1 class="font-extrabold text-lg leading-tight text-[var(--ink)]">Speaking Corner</h1>
+        <p class="text-xs font-semibold text-[var(--mut)]">Live English Session</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <div class="sc-chip font-bold text-xs">
+        Room <b class="tracking-widest text-[#FF5500] ml-1">${esc(code)}</b>
+      </div>
+      <button class="sc-btn sc-btn-secondary text-xs px-3 py-2" data-a="copy" title="Copy room link">
+        🔗 Link
+      </button>
+      <button class="sc-btn sc-btn-secondary text-xs px-3 py-2" data-a="sound" title="Play sound check">
+        🔔 Sound
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="grid gap-6 ${isHost && !pres ? 'lg:grid-cols-[1fr_360px]' : ''}">
+    <section id="stage" class="sc-card p-6 sm:p-9 text-center space-y-6 flex flex-col justify-between"></section>
+    <aside id="setup" class="space-y-5"></aside>
+  </main>
+  `;
+}
+
+function renderStage() {
+  const stageEl = $("#stage");
+  if (!stageEl || !S) return;
+  const s = S;
+  const intro = s.phase === "intro";
+  const sp = s.phase === "speaking";
+  const live = intro || sp;
+  const done = s.people.filter(p => !s.queue.includes(p) && p !== s.current);
+
+  // Speaker Card
+  let speakerHtml = "";
+  if (sp && s.current) {
+    const initial = s.current.charAt(0).toUpperCase();
+    speakerHtml = `
+      <div class="py-2 flex flex-col items-center justify-center gap-3 animate-fadeIn">
+        <div class="relative">
+          <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-[#FF5500] to-[#FFA040] text-white font-black text-4xl sm:text-5xl flex items-center justify-center shadow-xl ${s.running ? 'speaking-glow' : ''}">
+            ${esc(initial)}
+          </div>
+          <span class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-xs text-white shadow">
+            🎙️
+          </span>
+        </div>
+        <div class="space-y-0.5">
+          <p class="text-xs font-bold uppercase tracking-wider text-[#FF5500]">Now Speaking</p>
+          <h2 class="text-3xl sm:text-5xl font-black text-[var(--ink)] tracking-tight">${esc(s.current)}</h2>
+        </div>
+      </div>
+    `;
+  } else if (intro) {
+    speakerHtml = `
+      <div class="py-6 space-y-2 animate-fadeIn">
+        <div class="inline-block p-4 rounded-3xl bg-[var(--pri-light)] text-3xl mb-1">🎤</div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-[var(--ink)]">Topic Introduction</h2>
+        <p class="text-sm font-semibold text-[var(--mut)] max-w-md mx-auto">
+          The host is framing the topic and discussion context. Get your thoughts ready!
+        </p>
+      </div>
+    `;
+  } else {
+    speakerHtml = `
+      <div class="py-8 space-y-3 animate-fadeIn">
+        <div class="inline-block p-4 rounded-3xl bg-[var(--soft)] text-4xl mb-1">✨</div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-[var(--ink)]">Ready When You Are</h2>
+        <p class="text-sm font-semibold text-[var(--mut)] max-w-sm mx-auto">
+          ${isHost ? "Add your friends, choose a topic card, and click start!" : "Waiting for the host to begin the session…"}
+        </p>
+      </div>
+    `;
+  }
+
+  // Timer Circle
+  const ringHtml = live ? `
+    <div class="relative mx-auto my-3" style="width: min(44vh, 280px); height: min(44vh, 280px)">
+      <svg viewBox="0 0 300 300" class="-rotate-90 w-full h-full">
+        <circle cx="150" cy="150" r="128" fill="none" stroke="var(--soft)" stroke-width="18"/>
+        <circle id="ring" cx="150" cy="150" r="128" fill="none" stroke="#FF5500" stroke-width="18" stroke-linecap="round" stroke-dasharray="804.2"/>
+      </svg>
+      <div id="clock" class="absolute inset-0 flex flex-col items-center justify-center">
+        <span class="text-4xl sm:text-5xl font-black tracking-tight" style="font-variant-numeric: tabular-nums">00:00</span>
+        <span class="text-xs font-extrabold text-[var(--mut)] uppercase tracking-widest mt-1">${intro ? 'Intro' : 'Speaking'}</span>
+      </div>
+    </div>
+  ` : '';
+
+  // Host Live Controls
+  let controlsHtml = "";
+  if (isHost && live) {
+    if (intro) {
+      controlsHtml = `
+        <button class="sc-btn sc-btn-primary" data-a="toggle">${s.running ? '⏸ Pause' : '▶ Resume'}</button>
+        <button class="sc-btn sc-btn-secondary" data-a="reset">↺ Reset</button>
+        <button class="sc-btn sc-btn-primary" data-a="draw">🎯 First Speaker →</button>
+      `;
+    } else {
+      controlsHtml = `
+        <button class="sc-btn sc-btn-primary" data-a="toggle">${s.running ? '⏸ Pause' : '▶ Resume'}</button>
+        <button class="sc-btn sc-btn-primary" data-a="draw">Next Speaker →</button>
+        <button class="sc-btn sc-btn-secondary" data-a="restart">↺ Restart</button>
+        <button class="sc-btn sc-btn-secondary" data-a="skip">⏭ Skip</button>
+        <button class="sc-btn sc-btn-secondary" data-a="redraw">🔀 Redraw</button>
+      `;
+    }
+  }
+
+  stageEl.innerHTML = `
+    <!-- Top Topic Banner -->
+    ${s.topic ? `
+      <div class="p-4 sm:p-5 rounded-2xl bg-[var(--soft)] border border-[var(--border)] text-left flex items-start gap-3">
+        <span class="text-2xl shrink-0 mt-0.5">💬</span>
+        <div class="space-y-0.5">
+          <p class="text-xs font-bold uppercase tracking-wider text-[#FF5500]">Current Topic</p>
+          <p class="text-base sm:text-lg font-extrabold text-[var(--ink)] leading-snug">${esc(s.topic)}</p>
+        </div>
+      </div>
+    ` : ''}
+
+    ${speakerHtml}
+    ${ringHtml}
+
+    <!-- Friends Queue / Status -->
+    ${s.people.length ? `
+      <div class="space-y-2 pt-2">
+        <div class="flex items-center justify-between text-xs font-bold text-[var(--mut)] px-1">
+          <span>Participants (${s.people.length})</span>
+          ${live ? `<span class="text-[#FF5500]">Round ${s.round}</span>` : ''}
+        </div>
+        <div class="flex flex-wrap justify-center gap-2">
+          ${s.people.map(p => {
+            const isCurrent = p === s.current;
+            const isDone = done.includes(p);
+            return `
+              <span class="sc-chip ${isCurrent ? 'border-[#FF5500] text-[#FF5500] bg-[var(--pri-light)]' : ''}" style="${isDone ? 'opacity: 0.5' : ''}">
+                ${isCurrent ? '🎙️ ' : isDone ? '✓ ' : '👤 '}${esc(p)}
+              </span>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    <!-- Controls Bar -->
+    <div class="flex flex-wrap items-center justify-center gap-2 pt-4 border-t border-[var(--border)] ${pres ? 'hidden' : ''}">
+      ${controlsHtml}
+      <button class="sc-btn sc-btn-secondary text-sm" data-a="pres">
+        🖥 Presenter
+      </button>
+      ${isHost && s.phase !== "setup" ? `
+        <button class="sc-btn sc-btn-danger text-sm" data-a="end">
+          ■ End session
+        </button>
+      ` : ''}
+    </div>
+
+    ${pres ? `
+      <button class="fixed top-4 right-4 z-50 sc-chip bg-black/60 text-white border-0 hover:bg-black" data-a="pres">
+        ✕ Exit Presenter Mode
+      </button>
+    ` : ''}
+  `;
+}
+
+function renderSetup() {
+  const el = $("#setup");
+  if (!el) return;
+  if (!isHost || pres) {
+    el.innerHTML = "";
+    sig = "";
+    return;
+  }
+
+  const nsig = JSON.stringify([S.people, S.phase, selectedCategory]);
+  if (nsig === sig) return;
+  sig = nsig;
+
+  draft.tp = draft.tp ?? S.topic;
+  draft.is = draft.is ?? S.introSec;
+  draft.ss = draft.ss ?? S.speakSec;
+
+  const cat = CATEGORIES.find(c => c.id === selectedCategory) || CATEGORIES[0];
+
+  el.innerHTML = `
+    <!-- Setup Card: Participants -->
+    <div class="sc-card p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-extrabold text-base text-[var(--ink)]">Friends in Room (${S.people.length})</h3>
+        <span class="text-xs font-semibold text-[var(--mut)]">Auto-shuffled</span>
+      </div>
+
+      <div class="flex gap-2">
+        <input id="nm" class="sc-input text-sm" maxlength="30" placeholder="Add participant name…">
+        <button class="sc-btn sc-btn-primary px-4 text-sm" data-a="add">Add</button>
+      </div>
+
+      <div class="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+        ${S.people.length ? S.people.map(p => `
+          <span class="sc-chip text-xs">
+            ${esc(p)}
+            <button class="ml-1 text-zinc-400 hover:text-rose-500 font-bold" data-a="rm" data-n="${esc(p)}" aria-label="Remove">✕</button>
+          </span>
+        `).join('') : `
+          <p class="text-xs text-[var(--mut)] italic">No participants yet. Type a name above.</p>
+        `}
+      </div>
+    </div>
+
+    <!-- Setup Card: Topic Selection Grid (Screenshot 1 within Setup) -->
+    <div class="sc-card p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-extrabold text-base text-[var(--ink)]">Choose Topic</h3>
+        <button class="text-xs font-bold text-[#FF5500] hover:underline" data-a="shuffleTopic">🎲 Random</button>
+      </div>
+
+      <!-- Compact 3-Column Category Grid -->
+      <div class="grid grid-cols-3 gap-2">
+        ${CATEGORIES.map(c => `
+          <button class="p-2.5 rounded-2xl text-left border transition-all text-xs font-bold ${c.id === selectedCategory ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-md' : 'bg-[var(--soft)] text-[var(--ink)] border-[var(--border)]'}" data-cat="${c.id}">
+            <div class="text-base">${c.id === 'sports' ? '⚽' : c.id === 'entertainment' ? '🍿' : c.id === 'tech' ? '🤖' : c.id === 'gaming' ? '🎮' : c.id === 'religion' ? '🕊️' : '🏛️'}</div>
+            <div class="truncate mt-1">${esc(c.name)}</div>
+          </button>
+        `).join('')}
+      </div>
+
+      <!-- Topic Question Input -->
+      <div>
+        <label class="text-xs font-bold text-[var(--mut)] block mb-1">Speaking Prompt</label>
+        <div class="flex gap-2">
+          <input id="tp" class="sc-input text-sm" maxlength="140" placeholder="Type a topic question…" value="${esc(draft.tp || cat.topics[0])}">
+          <button class="sc-btn sc-btn-secondary px-3" data-a="shuffleTopic" title="Shuffle prompt">🎲</button>
+        </div>
+      </div>
+
+      <!-- Timer Durations -->
+      <div class="grid grid-cols-2 gap-3 pt-1">
+        <div>
+          <label class="text-xs font-bold text-[var(--mut)] block mb-1">Intro (sec)</label>
+          <input id="is" type="number" min="5" max="600" class="sc-input text-sm" value="${draft.is || 30}">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-[var(--mut)] block mb-1">Speaking (sec)</label>
+          <input id="ss" type="number" min="10" max="1800" class="sc-input text-sm" value="${draft.ss || 120}">
+        </div>
+      </div>
+
+      <!-- Start Button (Matches Screenshot 1 Orange Button) -->
+      ${S.phase === "setup" ? `
+        <button class="sc-btn sc-btn-primary w-full py-3.5 text-base font-extrabold shadow-lg" data-a="start">
+          Start Topic Intro →
+        </button>
+      ` : `
+        <p class="text-xs font-bold text-center text-[var(--mut)] py-1">
+          Session running — you can still add names or modify prompts.
+        </p>
+      `}
+    </div>
+  `;
+
+  if (refocus) {
+    const nm = $("#nm");
+    if (nm) nm.focus();
+    refocus = false;
+  }
+}
+
+function render() {
+  const app = $("#app");
+  if (!app) return;
+
+  if (!code && !S) {
+    if (activeScreen === "join") {
+      app.innerHTML = joinView();
+    } else {
+      app.innerHTML = homeView();
+    }
+    return;
+  }
+
+  if (!$("#stage")) {
+    app.innerHTML = shellView();
+    sig = "";
+  }
+
+  const hdr = $("#hdr");
+  if (hdr) hdr.hidden = pres;
+
+  renderStage();
+  renderSetup();
+  tick();
+}
+
+function tick() {
+  const c = $("#clock");
+  if (!S || !c) return;
+  const tot = (S.phase === "intro" ? S.introSec : S.speakSec) * 1000;
+  const left = S.running ? Math.max(0, S.endAt - (Date.now() + off)) : S.left;
+  const hot = left > 0 && left <= 10000;
+
+  const timeSpan = c.querySelector("span:first-child");
+  if (timeSpan) {
+    timeSpan.textContent = fmt(left);
+    timeSpan.style.color = hot ? "#EF4444" : "";
+  }
+
+  const r = $("#ring");
+  if (r) {
+    const circumference = 804.2;
+    r.style.strokeDashoffset = circumference * (1 - Math.min(1, left / tot));
+    r.style.stroke = hot ? "#EF4444" : "#FF5500";
+  }
+}
+
+// ----------------- ACTIONS & INTERACTIONS -----------------
+function act(a, n) {
+  if (a === "goToJoin") {
+    activeScreen = "join";
+    enteredCode = ["", "", "", "", ""];
+    render();
+    setTimeout(() => {
+      const inp = $("#hiddenCodeInput");
+      if (inp) inp.focus();
+    }, 100);
+    return;
+  }
+
+  if (a === "goToHome") {
+    activeScreen = "home";
+    render();
+    return;
+  }
+
+  if (a === "createWithTopic") {
+    const cat = CATEGORIES.find(c => c.id === selectedCategory) || CATEGORIES[0];
+    const top = customTopic.trim() || cat.topics[0];
+    draft.tp = top;
+    return send({ t: "create" });
+  }
+
+  if (a === "submitJoin") {
+    const c = enteredCode.join("").trim().toUpperCase();
+    if (c.length < 5) return toast("Please enter the complete 5-character code");
+    join(c);
+    return;
+  }
+
+  if (a === "pasteCode") {
+    navigator.clipboard?.readText().then(text => {
+      const clean = text.replace(/[^A-Za-z0-9]/g, "").slice(0, 5).toUpperCase();
+      if (clean) {
+        enteredCode = clean.padEnd(5, "").split("").slice(0, 5);
+        render();
+        if (clean.length === 5) join(clean);
+      }
+    }).catch(() => toast("Could not read clipboard"));
+    return;
+  }
+
+  if (a === "shuffleTopic") {
+    const cat = CATEGORIES.find(c => c.id === selectedCategory) || CATEGORIES[0];
+    const randomPrompt = cat.topics[Math.floor(Math.random() * cat.topics.length)];
+    customTopic = randomPrompt;
+    draft.tp = randomPrompt;
+    const tpInp = $("#tp");
+    if (tpInp) tpInp.value = randomPrompt;
+    const customInp = $("#customTopicInp");
+    if (customInp) customInp.value = randomPrompt;
+    render();
+    return;
+  }
+
+  if (a === "copy") {
+    navigator.clipboard?.writeText(location.origin + "/?room=" + code);
+    return toast("Room link copied to clipboard!");
+  }
+
+  if (a === "sound") return chime("start");
+
+  if (a === "pres") {
+    pres = !pres;
+    if (pres) document.documentElement.requestFullscreen?.().catch(() => {});
+    else if (document.fullscreenElement) document.exitFullscreen();
+    return render();
+  }
+
+  if (a === "add") {
+    const nm = $("#nm");
+    if (!nm) return;
+    const v = nm.value.trim();
+    if (!v) return;
+    refocus = true;
+    return send({ t: "act", a: "add", name: v });
+  }
+
+  if (a === "end" && !confirm("End session and reset turns?")) return;
+
+  if (a === "start") {
+    if (!S.people.length) return toast("Add at least one participant first");
+    const t = draft.tp || (CATEGORIES.find(c => c.id === selectedCategory) || CATEGORIES[0]).topics[0];
+    return send({ t: "act", a: "start", topic: t, introSec: draft.is || 30, speakSec: draft.ss || 120 });
+  }
+
+  send({ t: "act", a, name: n });
+}
+
+// Global Event Listeners
+document.addEventListener("click", e => {
+  // Category card tap
+  const catCard = e.target.closest("[data-cat]");
+  if (catCard) {
+    selectedCategory = catCard.dataset.cat;
+    const cat = CATEGORIES.find(c => c.id === selectedCategory);
+    if (cat && !customTopic) draft.tp = cat.topics[0];
+    render();
+    return;
+  }
+
+  // Keypad key tap (Screenshot 2)
+  const keyBtn = e.target.closest("[data-key]");
+  if (keyBtn) {
+    const k = keyBtn.dataset.key;
+    if (k === "CLEAR") {
+      enteredCode = ["", "", "", "", ""];
+    } else if (k === "SUBMIT") {
+      act("submitJoin");
+    } else {
+      const nextEmpty = enteredCode.findIndex(c => !c);
+      if (nextEmpty !== -1) {
+        enteredCode[nextEmpty] = k.toUpperCase();
+      }
+    }
+    render();
+    return;
+  }
+
+  // Code box tap -> focus hidden input
+  const codeBox = e.target.closest(".code-box");
+  if (codeBox) {
+    const inp = $("#hiddenCodeInput");
+    if (inp) inp.focus();
+    return;
+  }
+
+  // General Action buttons
+  const b = e.target.closest("[data-a]");
+  if (b) act(b.dataset.a, b.dataset.n);
+});
+
+document.addEventListener("input", e => {
+  if (e.target.id === "hiddenCodeInput") {
+    const val = e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 5);
+    enteredCode = ["", "", "", "", ""];
+    for (let i = 0; i < val.length; i++) enteredCode[i] = val[i];
+    render();
+    if (val.length === 5) act("submitJoin");
+    return;
+  }
+
+  if (e.target.id === "customTopicInp") {
+    customTopic = e.target.value;
+    draft.tp = customTopic;
+    return;
+  }
+
+  const k = { tp: "tp", is: "is", ss: "ss" }[e.target.id];
+  if (k) draft[k] = e.target.value;
+});
+
+document.addEventListener("keydown", e => {
+  // Backspace support for code boxes
+  if (activeScreen === "join" && !S) {
+    if (e.key === "Backspace") {
+      for (let i = 4; i >= 0; i--) {
+        if (enteredCode[i]) {
+          enteredCode[i] = "";
+          render();
+          break;
+        }
+      }
+      return;
+    }
+    if (/^[a-zA-Z0-9]$/.test(e.key)) {
+      const nextEmpty = enteredCode.findIndex(c => !c);
+      if (nextEmpty !== -1) {
+        enteredCode[nextEmpty] = e.key.toUpperCase();
+        render();
+        if (nextEmpty === 4) act("submitJoin");
+      }
+      return;
+    }
+  }
+
+  if (e.key === "Enter") {
+    if (e.target.id === "nm") act("add");
+    if (activeScreen === "join") act("submitJoin");
+  }
+});
+
+document.addEventListener("fullscreenchange", () => {
+  if (pres && !document.fullscreenElement) {
+    pres = false;
+    render();
+  }
+});
+
+document.addEventListener("pointerdown", () => {
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    ac.resume();
+  } catch (e) {}
+}, { once: true });
+
+setInterval(tick, 200);
+render();
+connect();
+</script>
+</body>
+</html>

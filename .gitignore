@@ -1,0 +1,9 @@
+node_modules/
+*.db
+*.db-shm
+*.db-wal
+*.log
+speaking-corner.zip
+speaking-corner/
+.env
+.DS_Store
