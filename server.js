@@ -23,12 +23,16 @@ const qPut = db.prepare("INSERT INTO rooms(code,host_key,state,updated) VALUES(?
 const rooms = new Map();
 const ri = n => crypto.randomInt(n);
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = ri(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const fresh = () => ({ people: [], queue: [], round: 0, topic: "", introSec: 30, speakSec: 120, phase: "setup", current: null, running: false, endAt: 0, left: 0, ev: { n: 0, kind: "" } });
+const fresh = () => ({ people: [], queue: [], round: 0, topic: "", introSec: 30, speakSec: 120, phase: "setup", current: null, running: false, endAt: 0, left: 0, ev: { n: 0, kind: "" }, points: {}, lastScore: null });
 
 function getRoom(code) {
   let r = rooms.get(code); if (r) return r;
   const row = qGet.get(code); if (!row) return null;
   r = { code, hostKey: row.host_key, state: JSON.parse(row.state), clients: new Set() };
+  if (!r.state.points) r.state.points = {};
+  for (const p of r.state.people || []) {
+    if (typeof r.state.points[p] !== "number") r.state.points[p] = 0;
+  }
   rooms.set(code, r); return r;
 }
 const persist = r => qPut.run(r.code, r.hostKey, JSON.stringify(r.state), Date.now());
@@ -37,6 +41,7 @@ const newCode = () => { const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; for (;;) {
 
 // ---- turn logic (server is the single source of truth) ----
 const clamp = (v, lo, hi, d) => (Number.isFinite(+v) && +v > 0 ? Math.min(hi, Math.max(lo, Math.round(+v))) : d);
+const clampNum = (v, lo, hi, d) => (Number.isFinite(+v) ? Math.min(hi, Math.max(lo, Math.round(+v))) : d);
 const startT = (s, sec) => { s.left = sec * 1000; s.endAt = Date.now() + s.left; s.running = true; };
 const ev = (s, k) => { s.ev = { n: s.ev.n + 1, kind: k }; };
 function draw(s) {
@@ -45,8 +50,45 @@ function draw(s) {
   s.current = s.queue.pop(); s.phase = "speaking"; startT(s, s.speakSec); ev(s, "start");
 }
 const ACTIONS = {
-  add(s, m) { const n = String(m.name || "").trim().slice(0, 30); if (!n || s.people.includes(n) || s.people.length >= 40) return; s.people.push(n); s.queue.splice(ri(s.queue.length + 1), 0, n); },
-  rm(s, m) { s.people = s.people.filter(p => p !== m.name); s.queue = s.queue.filter(p => p !== m.name); if (s.phase === "speaking" && s.current === m.name) draw(s); },
+  add(s, m) {
+    const n = String(m.name || "").trim().slice(0, 30);
+    if (!n || s.people.includes(n) || s.people.length >= 40) return;
+    s.people.push(n);
+    s.queue.splice(ri(s.queue.length + 1), 0, n);
+    if (!s.points) s.points = {};
+    if (typeof s.points[n] !== "number") s.points[n] = 0;
+  },
+  rm(s, m) {
+    s.people = s.people.filter(p => p !== m.name);
+    s.queue = s.queue.filter(p => p !== m.name);
+    if (s.points) delete s.points[m.name];
+    if (s.phase === "speaking" && s.current === m.name) draw(s);
+  },
+  score(s, m) {
+    const n = String(m.name || "").trim().slice(0, 30);
+    if (!s.people.includes(n)) return;
+    const delta = clampNum(m.delta, -100, 100, 1);
+    if (!s.points) s.points = {};
+    s.points[n] = Math.max(0, (s.points[n] || 0) + delta);
+    const reason = String(m.reason || "").trim().slice(0, 80);
+    s.lastScore = { name: n, delta, points: s.points[n], reason, t: Date.now() };
+    ev(s, "score");
+  },
+  setPoints(s, m) {
+    const n = String(m.name || "").trim().slice(0, 30);
+    if (!s.people.includes(n)) return;
+    const pts = Math.max(0, clampNum(m.points, 0, 9999, 0));
+    if (!s.points) s.points = {};
+    s.points[n] = pts;
+    s.lastScore = { name: n, delta: 0, points: pts, reason: "Manual score edit", t: Date.now() };
+    ev(s, "score");
+  },
+  resetPoints(s) {
+    s.points = {};
+    for (const p of s.people) s.points[p] = 0;
+    s.lastScore = null;
+    ev(s, "score");
+  },
   start(s, m) {
     const t = String(m.topic || "").trim().slice(0, 140); if (!s.people.length || !t) return;
     s.topic = t; s.introSec = clamp(m.introSec, 5, 600, 30); s.speakSec = clamp(m.speakSec, 10, 1800, 120);
@@ -58,7 +100,14 @@ const ACTIONS = {
   draw(s) { if (s.phase !== "setup") draw(s); },
   skip(s) { if (s.phase === "speaking") { if (s.queue.length) s.queue.unshift(s.current); draw(s); } }, // skipped person goes to back of queue
   redraw(s) { if (s.phase === "speaking") { s.queue = shuffle(s.queue.concat(s.current)); draw(s); } },
-  end(s) { const p = s.people; Object.assign(s, fresh(), { people: p, queue: shuffle(p) }); },
+  end(s) {
+    const p = s.people;
+    const pts = s.points || {};
+    for (const person of p) {
+      if (typeof pts[person] !== "number") pts[person] = 0;
+    }
+    Object.assign(s, fresh(), { people: p, queue: shuffle(p), points: pts });
+  },
 };
 
 // ---- server-side timer: advances turns even if the host's tab sleeps ----
